@@ -1,6 +1,12 @@
 #====================================
 #     PHONE BOOK
 #===================================
+class Contact(object):
+    def __init__(self, name, phone):
+        self.name = name
+        self.phone = phone
+
+
 menu = '''
 Electronic Phone Book
 =====================
@@ -24,30 +30,31 @@ def run_phonebook():
     return choice != '5'
 
 def lookup_entry():
-    name = raw_input('Enter name: ')
+    name = raw_input('Enter name: ').lower()
     if name in phonebook:
-        return "Found entry for %s: %s" % (name, phonebook[name])
+        return "Found entry for %s: %s" % (phonebook[name].name, phonebook[name].phone)
     else:
         return "not valid"
 
 def set_an_entry():
     name = raw_input('Name: ')
     phone = raw_input('Phone Number:')
-    phonebook[name] = phone
+    contact = Contact(name, phone)
+    phonebook[name.lower()] = contact
     return "Entry stored for %s" % name
 
 def delete_entry():
     name = raw_input('Enter name: ')
-    if name in phonebook:
-        del phonebook[name]
-        return "Deleted entry for %s" %name
+    if name.lower() in phonebook:
+        del phonebook[name.lower()]
+        return "Deleted entry for %s" % name
     else: 
         return "%s not found." % name
 
 def list_all_entries():
     entries = ''
     for name in phonebook:
-        entries += "Found Entry for %s: %s\n" % (name, phonebook[name])
+        entries += "Found Entry for %s: %s\n" % (phonebook[name].name, phonebook[name].phone)
     return entries
 
 def quit_phonebook():
