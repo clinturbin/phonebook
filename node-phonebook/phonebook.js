@@ -29,16 +29,12 @@ var runPhoneBook = function () {
 
 var openPhoneBookMenu = function () {
     console.log(menu);
-    selectedMenuOption();
-}
-
-var selectedMenuOption = function () {
     var rl = createReadLineInterface();
     rl.question("What do you want to do (1 - 5)? ", function (option) {
         rl.close();
         openMenuOption(option);
     });
-};
+}
 
 var openMenuOption = function (option) {
     switch (option) {
@@ -59,7 +55,7 @@ var openMenuOption = function (option) {
             break;
         default:
             console.log("Invalid Choice: ");
-            selectedMenuOption();
+            openPhoneBookMenu();
     }
 };
 
