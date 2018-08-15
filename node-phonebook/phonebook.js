@@ -18,8 +18,6 @@ var createReadLineInterface = function () {
     });
 };
 
-
-// Get user input to select what to do
 var selectedMenuOption = function () {
     var rl = createReadLineInterface();
     rl.question("What do you want to do (1 - 5)? ", function (option) {
@@ -44,7 +42,7 @@ var openMenuOption = function (option) {
             listAllEntries();
             break;
         case '5':
-            quitPhoneBook();
+            console.log("Goodbye!!")
             break;
         default:
             console.log("Invalid Choice: ");
@@ -53,11 +51,12 @@ var openMenuOption = function (option) {
 };
 
 var getPhoneBookFromFile = function (content) {
-    if (content === '') {
-        return {};
-    } else {
-        return JSON.parse(content)
-    }
+    return JSON.parse(content || '{}');
+    // if (content === '') {
+    //     return {};
+    // } else {
+    //     return JSON.parse(content)
+    // }
 };
 
 var lookUpEntry = function () {
@@ -85,7 +84,7 @@ var createEntry = function () {
                 var phoneBook = getPhoneBookFromFile(content);
                 phoneBook[name] = phone;
                 fs.writeFile("phone-book.txt", JSON.stringify(phoneBook), function (error) {
-                    console.log(phoneBook);
+                    console.log(`${name}: ${phone} - added to Phone Book!`);
                     showMainMenu();
                 });
             });
@@ -93,16 +92,28 @@ var createEntry = function () {
     });
 };
 
-// var deleteEntry = function () {
-//     console.log("deleteEntry selected");
-// };
+var deleteEntry = function () {
+    var rl = createReadLineInterface();
+    rl.question("Enter Name: ", function (name) {
+        rl.close();
+        fs.readFile("phone-book.txt", "utf8", function (error, content) {
+            var phoneBook = getPhoneBookFromFile(content);
+            if (Object.keys(phoneBook).includes(name)) {
+                delete phoneBook[name];
+                fs.writeFile("phone-book.txt", JSON.stringify(phoneBook), function (error) {
+                    console.log(`${name} removed from Phone Book`);
+                    showMainMenu();
+                });
+            } else {
+                console.log(`No Entry Found for ${name}`);
+                showMainMenu();
+            }
+        });
+    });
+};
 
 // var listAllEntries = function () {
 //     console.log("listAllEntries selected");
-// };
-
-// var quitPhoneBook = function () {
-//     console.log("quitPhoneBook selected");
 // };
 
 var showMainMenu = function () {
