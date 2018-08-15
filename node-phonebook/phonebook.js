@@ -9,7 +9,7 @@ Electronic Phone Book
 3. Delete an entry
 4. List all entries
 5. Quit
-`
+`;
 
 var createReadLineInterface = function () {
     return readline.createInterface({
@@ -47,14 +47,10 @@ var openMenuOption = function (option) {
             quitPhoneBook();
             break;
         default:
-            console.log("Invalid Choice");
+            console.log("Invalid Choice: ");
+            selectedMenuOption();
     }
 };
-
-// var lookUpEntry = function () {
-//     console.log("lookup entry selected");
-// };
-
 
 var getPhoneBookFromFile = function (content) {
     if (content === '') {
@@ -62,6 +58,22 @@ var getPhoneBookFromFile = function (content) {
     } else {
         return JSON.parse(content)
     }
+};
+
+var lookUpEntry = function () {
+    var rl = createReadLineInterface();
+    rl.question("Lookup Name: ", function (name) {
+        rl.close();
+        fs.readFile("phone-book.txt", "utf8", function (error, content) {
+            var phoneBook = getPhoneBookFromFile(content);
+            if (Object.keys(phoneBook).includes(name)) {
+                console.log(`${name}: ${phoneBook[name]}`);
+            } else {
+                console.log(`No Entry Found for ${name}`);
+            }
+            showMainMenu();
+        });
+    });
 };
 
 var createEntry = function () {
@@ -80,24 +92,6 @@ var createEntry = function () {
         });
     });
 };
-
-// var addContactToFile = function (contact) {
-//     fs.readFile("phone-book.txt", "utf8", function (error, contacts) {
-//         var phoneBook = JSON.parse(contacts);
-//         fs.writeFile("phone-book.txt", contact, function () {
-
-//         })
-//     })
-//     fs.writeFile("phone-book.txt", content., function (error) {
-//         if (error) {
-//             console.log(error.message);
-//         } else {
-//             console.log("Input file: %s", inputFile);
-//             console.log("Output file: %s", outputFile);
-//             console.log("Wrote to file %s", outputFile);
-//         }
-//     });
-// };
 
 // var deleteEntry = function () {
 //     console.log("deleteEntry selected");
