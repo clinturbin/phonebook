@@ -112,9 +112,15 @@ var deleteEntry = function () {
     });
 };
 
-// var listAllEntries = function () {
-//     console.log("listAllEntries selected");
-// };
+var listAllEntries = function () {
+    fs.readFile("phone-book.txt", "utf8", function (error, content) {
+        var phoneBook = getPhoneBookFromFile(content);
+        for (var contact in phoneBook) {
+            console.log(`${contact}: ${phoneBook[contact]}`);
+        }
+        showMainMenu();
+    });
+};
 
 var showMainMenu = function () {
     console.log(menu);
