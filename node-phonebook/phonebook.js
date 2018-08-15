@@ -1,6 +1,15 @@
 var fs = require("fs");
 var readline = require("readline");
 
+var createReadLineInterface = function () {
+    return readline.createInterface({
+        input: process.stdin,
+        output: process.stdout    
+    });
+};
+
+var phoneBook;
+
 var menu = `
 Electronic Phone Book
 =====================
@@ -11,12 +20,17 @@ Electronic Phone Book
 5. Quit
 `;
 
-var createReadLineInterface = function () {
-    return readline.createInterface({
-        input: process.stdin,
-        output: process.stdout    
+var runPhoneBook = function () {
+    fs.readFile("phone-book.txt", "utf8", function (error, content) {
+        phoneBook = JSON.parse(content || '{}');
+        openPhoneBookMenu();
     });
 };
+
+var openPhoneBookMenu = function () {
+    console.log(menu);
+    selectedMenuOption();
+}
 
 var selectedMenuOption = function () {
     var rl = createReadLineInterface();
@@ -25,7 +39,6 @@ var selectedMenuOption = function () {
         openMenuOption(option);
     });
 };
-
 
 var openMenuOption = function (option) {
     switch (option) {
@@ -42,7 +55,7 @@ var openMenuOption = function (option) {
             listAllEntries();
             break;
         case '5':
-            console.log("Goodbye!!")
+            quitPhoneBook();
             break;
         default:
             console.log("Invalid Choice: ");
@@ -50,28 +63,16 @@ var openMenuOption = function (option) {
     }
 };
 
-var getPhoneBookFromFile = function (content) {
-    return JSON.parse(content || '{}');
-    // if (content === '') {
-    //     return {};
-    // } else {
-    //     return JSON.parse(content)
-    // }
-};
-
 var lookUpEntry = function () {
     var rl = createReadLineInterface();
     rl.question("Lookup Name: ", function (name) {
         rl.close();
-        fs.readFile("phone-book.txt", "utf8", function (error, content) {
-            var phoneBook = getPhoneBookFromFile(content);
-            if (Object.keys(phoneBook).includes(name)) {
-                console.log(`${name}: ${phoneBook[name]}`);
-            } else {
-                console.log(`No Entry Found for ${name}`);
-            }
-            showMainMenu();
-        });
+        if (Object.keys(phoneBook).includes(name)) {
+            console.log(`${name}: ${phoneBook[name]}`);
+        } else {
+            console.log(`No Entry Found for ${name}`);
+        }
+        openPhoneBookMenu();
     });
 };
 
@@ -80,14 +81,8 @@ var createEntry = function () {
     rl.question("Name: ", function (name) {
         rl.question("Phone Number: ", function (phone) {
             rl.close();
-            fs.readFile("phone-book.txt", "utf8", function (error, content) {
-                var phoneBook = getPhoneBookFromFile(content);
-                phoneBook[name] = phone;
-                fs.writeFile("phone-book.txt", JSON.stringify(phoneBook), function (error) {
-                    console.log(`${name}: ${phone} - added to Phone Book!`);
-                    showMainMenu();
-                });
-            });
+            phoneBook[name] = phone;
+            openPhoneBookMenu();
         });
     });
 };
@@ -96,35 +91,27 @@ var deleteEntry = function () {
     var rl = createReadLineInterface();
     rl.question("Enter Name: ", function (name) {
         rl.close();
-        fs.readFile("phone-book.txt", "utf8", function (error, content) {
-            var phoneBook = getPhoneBookFromFile(content);
-            if (Object.keys(phoneBook).includes(name)) {
-                delete phoneBook[name];
-                fs.writeFile("phone-book.txt", JSON.stringify(phoneBook), function (error) {
-                    console.log(`${name} removed from Phone Book`);
-                    showMainMenu();
-                });
-            } else {
-                console.log(`No Entry Found for ${name}`);
-                showMainMenu();
-            }
-        });
+        if (Object.keys(phoneBook).includes(name)) {
+            console.log(`${name}: ${phoneBook[name]} has been removed from Phone Book.`);
+            delete phoneBook[name];
+        } else {
+            console.log(`No Entry Found for ${name}`);
+        }
+        openPhoneBookMenu();
     });
 };
 
 var listAllEntries = function () {
-    fs.readFile("phone-book.txt", "utf8", function (error, content) {
-        var phoneBook = getPhoneBookFromFile(content);
-        for (var contact in phoneBook) {
-            console.log(`${contact}: ${phoneBook[contact]}`);
-        }
-        showMainMenu();
+    for (var contact in phoneBook) {
+        console.log(`${contact}: ${phoneBook[contact]}`);
+    }
+    openPhoneBookMenu();
+};
+
+var quitPhoneBook = function () {
+    fs.writeFile("phone-book.txt", JSON.stringify(phoneBook), function (error) {
+        console.log("Goodbye!!");
     });
 };
 
-var showMainMenu = function () {
-    console.log(menu);
-    selectedMenuOption();    
-};
-
-showMainMenu();
+runPhoneBook();
