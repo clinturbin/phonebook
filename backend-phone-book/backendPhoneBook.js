@@ -17,6 +17,8 @@ var startServer = function () {
             res.end(displayAllContacts());
         } else if (req.url.startsWith(contactPrefix) && req.method === 'GET') {
             res.end(displayOneContact(req, contactPrefix));
+        } else if (req.url.startsWith(contactPrefix) && req.method === 'DELETE') {
+            res.end(deleteContact(req, contactPrefix));
         } else {
             res.end('404 no contacts here');
         }
@@ -31,6 +33,16 @@ var displayOneContact = function (req, contactPrefix) {
     var name = req.url.slice(contactPrefix.length);
     if (contacts.hasOwnProperty(name)) {
         return `Phone number for ${name} is ${contacts[name]}`;
+    } else {
+        return `No contact info for ${name}`;
+    }
+};
+
+var deleteContact = function (req, contactPrefix) {
+    var name = req.url.slice(contactPrefix.length);
+    if (contacts.hasOwnProperty(name)) {
+        delete contacts[name];
+        return `${name} was removed`;
     } else {
         return `No contact info for ${name}`;
     }
