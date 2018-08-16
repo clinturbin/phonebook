@@ -11,17 +11,29 @@ var readPhoneBookFromFile = function () {
 };
 
 var startServer = function () {
+    var contactPrefix = '/contacts/';
     http.createServer(function (req, res) {
         if (req.url === '/contacts' && req.method === 'GET') {
-            res.end(listAllContacts());
+            res.end(displayAllContacts());
+        } else if (req.url.startsWith(contactPrefix) && req.method === 'GET') {
+            res.end(displayOneContact(req, contactPrefix));
         } else {
-            res.end('404 no hobbit found');
+            res.end('404 no contacts here');
         }
     }).listen(3000);
 };
 
-var listAllContacts = function () {
+var displayAllContacts = function () {
     return JSON.stringify(contacts);
+};
+
+var displayOneContact = function (req, contactPrefix) {
+    var name = req.url.slice(contactPrefix.length);
+    if (contacts.hasOwnProperty(name)) {
+        return `Phone number for ${name} is ${contacts[name]}`;
+    } else {
+        return `No contact info for ${name}`;
+    }
 };
 
 readPhoneBookFromFile();
