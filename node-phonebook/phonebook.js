@@ -63,7 +63,7 @@ var lookUpEntry = function () {
     var rl = createReadLineInterface();
     rl.question("Lookup Name: ", function (name) {
         rl.close();
-        if (Object.keys(phoneBook).includes(name)) {
+        if (phoneBook.hasOwnProperty(name)) {
             console.log(`${name}: ${phoneBook[name]}`);
         } else {
             console.log(`No Entry Found for ${name}`);
@@ -87,7 +87,7 @@ var deleteEntry = function () {
     var rl = createReadLineInterface();
     rl.question("Enter Name: ", function (name) {
         rl.close();
-        if (Object.keys(phoneBook).includes(name)) {
+        if (phoneBook.hasOwnProperty(name)) {
             console.log(`${name}: ${phoneBook[name]} has been removed from Phone Book.`);
             delete phoneBook[name];
         } else {
