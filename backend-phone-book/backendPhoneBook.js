@@ -1,21 +1,21 @@
-var http = require('http');
-var fs = require('fs');
+const http = require('http');
+const fs = require('fs');
 
-var contacts;
+let contacts;
 
-var readPhoneBookFromFile = function () {
+let readPhoneBookFromFile = function () {
     fs.readFile("phone-book.txt", "utf8", function (error, content) {
         contacts = JSON.parse(content || '{}');
         startServer();
     });
 };
 
-var generateRandomID = function () {
+let generateRandomID = function () {
     return Math.floor(Math.random() * 100000).toString();
 };
 
-var startServer = function () {
-    var contactPrefix = '/contacts/';
+let startServer = function () {
+    let contactPrefix = '/contacts/';
     http.createServer(function (req, res) {
         if (req.url === '/contacts' && req.method === 'GET') {
             res.end(displayAllContacts());
@@ -23,6 +23,8 @@ var startServer = function () {
             res.end(displayOneContact(req, contactPrefix));
         } else if (req.url.startsWith(contactPrefix) && req.method === 'DELETE') {
             res.end(deleteContact(req, contactPrefix));
+        } else if (req.url.startsWith(contactPrefix) && req.method === 'PUT') {
+            updateContact(req, contactPrefix);
         } else if (req.url === '/contacts' && req.method === "POST") {
             createNewContact(req, res);
         } else {
@@ -31,12 +33,12 @@ var startServer = function () {
     }).listen(3000);
 };
 
-var displayAllContacts = function () {
+let displayAllContacts = function () {
     return JSON.stringify(contacts);
 };
 
-var displayOneContact = function (req, contactPrefix) {
-    var contactId = req.url.slice(contactPrefix.length);
+let displayOneContact = function (req, contactPrefix) {
+    let contactId = req.url.slice(contactPrefix.length);
     if (contacts.hasOwnProperty(contactId)) {
         return JSON.stringify(contacts[contactId]['name']);
     } else {
@@ -44,8 +46,12 @@ var displayOneContact = function (req, contactPrefix) {
     }
 };
 
-var deleteContact = function (req, contactPrefix) {
-    var contactId = req.url.slice(contactPrefix.length);
+// let updateContact = function (req, contactPrefix) {
+//     var contactId = req.url.slice(contactPrefix.length);
+// }
+
+let deleteContact = function (req, contactPrefix) {
+    let contactId = req.url.slice(contactPrefix.length);
     if (contacts.hasOwnProperty(contactId)) {
         delete contacts[contactId];
         fs.writeFile("phone-book.txt", JSON.stringify(contacts), function (error) {
@@ -56,13 +62,13 @@ var deleteContact = function (req, contactPrefix) {
     }
 };
 
-var createNewContact = function (req, res) {
-    var body = '';
+let createNewContact = function (req, res) {
+    let body = '';
     req.on('data', function (chunk) {
         body += chunk.toString();
     });
     req.on('end', function () {
-        var contact = JSON.parse(body);
+        let contact = JSON.parse(body);
         contacts[generateRandomID()] = contact;
         fs.writeFile("phone-book.txt", JSON.stringify(contacts), function (error) {
             res.end('Created Contact!');
