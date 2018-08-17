@@ -13,25 +13,7 @@ let readPhoneBookFromFile = () => {
 
 let generateRandomID = () => Math.floor(Math.random() * 100000).toString();
 
-let startServer = () => {
-    http.createServer((req, res) => {
-        if (req.url === contactPrefix && req.method === 'GET') {
-            displayAllContacts(res);
-        } else if (req.url.startsWith(contactPrefix) && req.method === 'GET') {
-            displayOneContact(req, res);
-        } else if (req.url.startsWith(contactPrefix) && req.method === 'DELETE') {
-            deleteContact(req, res);
-        } else if (req.url.startsWith(contactPrefix) && req.method === 'PUT') {
-            updateContact(req, res);
-        } else if (req.url === contactPrefix && req.method === "POST") {
-            createNewContact(req, res);
-        } else {
-            res.end('404 no contacts here');
-        }
-    }).listen(3000);
-};
-
-let displayAllContacts = (res) => res.end(JSON.stringify(contacts));
+let displayAllContacts = (req, res) => res.end(JSON.stringify(contacts));
 
 let displayOneContact = (req, res) => {
     let contactId = req.url.slice(contactPrefix.length + 1);
@@ -57,10 +39,10 @@ let deleteContact = (req, res) => {
 let createNewContact = (req, res) => {
     readBody(req, (contact) => {
         let randomId = generateRandomID();
+        contact.id = randomId;
         contacts[randomId] = contact;
-        contacts[randomId]['id'] = randomId;
         fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
-            res.end('Created Contact');
+            res.end(JSON.stringify(contact));
         });
     });
 };
@@ -78,7 +60,6 @@ let updateContactNameAndPhone = (req, res, contactId) => {
     readBody(req, (contact) => {
         contacts[contactId]['name'] = contact['name'];
         contacts[contactId]['phone'] = contact['phone'];
-        console.log(contacts[contactId]['name'] + ": " + contacts[contactId]['phone']);
         fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
             res.end('Contact Updated');
         });
@@ -94,6 +75,51 @@ let readBody = (req, callback) => {
         let contact = JSON.parse(body);
         callback(contact);
     });
+};
+
+let noContactsFound = (req, res) => {
+    res.end("Error 404 No Contacts Found");
+};
+
+let routes = [
+    {
+        method: 'GET',
+        url: '/contacts/',
+        run: displayOneContact
+    },
+    {
+        method: 'GET',
+        url: '/contacts',
+        run: displayAllContacts
+    },
+    {
+        method: 'DELETE',
+        url: '/contacts/',
+        run: deleteContact
+    },
+    {
+        method: 'POST',
+        url: '/contacts',
+        run: createNewContact
+    },
+    {
+        method: 'PUT',
+        url: '/contacts/',
+        run: updateContact
+    },
+    {
+        method: 'GET',
+        url: '',
+        run: noContactsFound
+    },
+];
+
+let startServer = () => {
+    let server = http.createServer((req, res) => {
+        let route = routes.find(route => req.url.startsWith(route.url) && req.method === route.method);
+        route.run(req, res);
+    });
+    server.listen(3000);
 };
 
 readPhoneBookFromFile();
