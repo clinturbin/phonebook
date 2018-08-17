@@ -1,5 +1,6 @@
 const http = require('http');
 const fs = require('fs');
+const contactPrefix = '/contacts';
 
 let contacts;
 
@@ -13,17 +14,16 @@ let readPhoneBookFromFile = () => {
 let generateRandomID = () => Math.floor(Math.random() * 100000).toString();
 
 let startServer = () => {
-    let contactPrefix = '/contacts/';
     http.createServer((req, res) => {
-        if (req.url === '/contacts' && req.method === 'GET') {
-            res.end(displayAllContacts(res));
+        if (req.url === contactPrefix && req.method === 'GET') {
+            displayAllContacts(res);
         } else if (req.url.startsWith(contactPrefix) && req.method === 'GET') {
-            res.end(displayOneContact(req, contactPrefix));
+            displayOneContact(req, res);
         } else if (req.url.startsWith(contactPrefix) && req.method === 'DELETE') {
-            deleteContact(req, res, contactPrefix);
+            deleteContact(req, res);
         } else if (req.url.startsWith(contactPrefix) && req.method === 'PUT') {
-            updateContact(req, contactPrefix);
-        } else if (req.url === '/contacts' && req.method === "POST") {
+            updateContact(req, res);
+        } else if (req.url === contactPrefix && req.method === "POST") {
             createNewContact(req, res);
         } else {
             res.end('404 no contacts here');
@@ -31,23 +31,19 @@ let startServer = () => {
     }).listen(3000);
 };
 
-let displayAllContacts = () => JSON.stringify(contacts);
+let displayAllContacts = (res) => res.end(JSON.stringify(contacts));
 
-let displayOneContact = (req, contactPrefix) => {
-    let contactId = req.url.slice(contactPrefix.length);
+let displayOneContact = (req, res) => {
+    let contactId = req.url.slice(contactPrefix.length + 1);
     if (contacts.hasOwnProperty(contactId)) {
-        return JSON.stringify(contacts[contactId]['name']);
+        res.end(JSON.stringify(contacts[contactId]['name']));
     } else {
-        return `Info not found`;
+        res.end("Info Not Found");
     }
 };
 
-// let updateContact = function (req, contactPrefix) {
-//     var contactId = req.url.slice(contactPrefix.length);
-// }
-
-let deleteContact = (req, res, contactPrefix) => {
-    let contactId = req.url.slice(contactPrefix.length);
+let deleteContact = (req, res) => {
+    let contactId = req.url.slice(contactPrefix.length + 1);
     if (contacts.hasOwnProperty(contactId)) {
         delete contacts[contactId];
         fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
@@ -59,16 +55,44 @@ let deleteContact = (req, res, contactPrefix) => {
 };
 
 let createNewContact = (req, res) => {
+    readBody(req, (contact) => {
+        let randomId = generateRandomID();
+        contacts[randomId] = contact;
+        contacts[randomId]['id'] = randomId;
+        fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
+            res.end('Created Contact');
+        });
+    });
+};
+
+let updateContact = (req, res) => {
+    let contactId = req.url.slice(contactPrefix.length + 1);
+    if (contacts.hasOwnProperty(contactId)) {
+        updateContactNameAndPhone(req, res, contactId);
+    } else {
+        res.end('No Contact Found');
+    }
+};
+
+let updateContactNameAndPhone = (req, res, contactId) => {
+    readBody(req, (contact) => {
+        contacts[contactId]['name'] = contact['name'];
+        contacts[contactId]['phone'] = contact['phone'];
+        console.log(contacts[contactId]['name'] + ": " + contacts[contactId]['phone']);
+        fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
+            res.end('Contact Updated');
+        });
+    });
+};
+
+let readBody = (req, callback) => {
     let body = '';
     req.on('data', (chunk) => {
         body += chunk.toString();
     });
     req.on('end', () => {
         let contact = JSON.parse(body);
-        contacts[generateRandomID()] = contact;
-        fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
-            res.end('Created Contact!');
-        });
+        callback(contact);
     });
 };
 
