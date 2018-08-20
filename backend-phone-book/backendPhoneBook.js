@@ -84,39 +84,39 @@ let noContactsFound = (req, res) => {
 let routes = [
     {
         method: 'GET',
-        url: '/contacts/',
+        url: /^\/contacts\/[0-9]+$/,
         run: displayOneContact
     },
     {
-        method: 'GET',
-        url: '/contacts',
-        run: displayAllContacts
-    },
-    {
         method: 'DELETE',
-        url: '/contacts/',
+        url: /^\/contacts\/[0-9]+$/,
         run: deleteContact
     },
     {
+        method: 'GET',
+        url: /^\/contacts\/?$/,
+        run: displayAllContacts
+    },
+    {
         method: 'POST',
-        url: '/contacts',
+        url: /^\/contacts\/?$/,
         run: createNewContact
     },
     {
         method: 'PUT',
-        url: '/contacts/',
+        url: /^\/contacts\/[0-9]+$/,
         run: updateContact
     },
     {
         method: 'GET',
-        url: '',
+        url: /^.*$/,
         run: noContactsFound
     },
 ];
 
 let startServer = () => {
     let server = http.createServer((req, res) => {
-        let route = routes.find(route => req.url.startsWith(route.url) && req.method === route.method);
+        let route = routes.find(route => route.url.test(req.url) && req.method === route.method);
         route.run(req, res);
     });
     server.listen(3000);
