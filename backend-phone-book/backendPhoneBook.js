@@ -1,6 +1,5 @@
 const http = require('http');
 const fs = require('fs');
-const contactPrefix = '/contacts';
 
 let contacts;
 
@@ -13,10 +12,10 @@ let readPhoneBookFromFile = () => {
 
 let generateRandomID = () => Math.floor(Math.random() * 100000).toString();
 
-let displayAllContacts = (req, res) => res.end(JSON.stringify(contacts));
+let displayAllContacts = (req, res, matches) => res.end(JSON.stringify(contacts));
 
-let displayOneContact = (req, res) => {
-    let contactId = req.url.slice(contactPrefix.length + 1);
+let displayOneContact = (req, res, matches) => {
+    let contactId = matches[0];
     if (contacts.hasOwnProperty(contactId)) {
         res.end(JSON.stringify(contacts[contactId]['name']));
     } else {
@@ -24,8 +23,8 @@ let displayOneContact = (req, res) => {
     }
 };
 
-let deleteContact = (req, res) => {
-    let contactId = req.url.slice(contactPrefix.length + 1);
+let deleteContact = (req, res, matches) => {
+    let contactId = matches[0];
     if (contacts.hasOwnProperty(contactId)) {
         delete contacts[contactId];
         fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
@@ -36,7 +35,7 @@ let deleteContact = (req, res) => {
     }
 };
 
-let createNewContact = (req, res) => {
+let createNewContact = (req, res, matches) => {
     readBody(req, (contact) => {
         let randomId = generateRandomID();
         contact.id = randomId;
@@ -47,8 +46,8 @@ let createNewContact = (req, res) => {
     });
 };
 
-let updateContact = (req, res) => {
-    let contactId = req.url.slice(contactPrefix.length + 1);
+let updateContact = (req, res, matches) => {
+    let contactId = matches[0];
     if (contacts.hasOwnProperty(contactId)) {
         updateContactNameAndPhone(req, res, contactId);
     } else {
@@ -77,19 +76,19 @@ let readBody = (req, callback) => {
     });
 };
 
-let noContactsFound = (req, res) => {
+let noContactsFound = (req, res, matches) => {
     res.end("Error 404 No Contacts Found");
 };
 
 let routes = [
     {
         method: 'GET',
-        url: /^\/contacts\/[0-9]+$/,
+        url: /^\/contacts\/([0-9]+)$/,
         run: displayOneContact
     },
     {
         method: 'DELETE',
-        url: /^\/contacts\/[0-9]+$/,
+        url: /^\/contacts\/([0-9]+)$/,
         run: deleteContact
     },
     {
@@ -104,7 +103,7 @@ let routes = [
     },
     {
         method: 'PUT',
-        url: /^\/contacts\/[0-9]+$/,
+        url: /^\/contacts\/([0-9]+)$/,
         run: updateContact
     },
     {
@@ -117,7 +116,8 @@ let routes = [
 let startServer = () => {
     let server = http.createServer((req, res) => {
         let route = routes.find(route => route.url.test(req.url) && req.method === route.method);
-        route.run(req, res);
+        let matches = route.url.exec(req.url);
+        route.run(req, res, matches.slice(1));
     });
     server.listen(3000);
 };
