@@ -6,6 +6,7 @@ let contacts;
 let readPhoneBookFromFile = () => {
     fs.readFile("phone-book.txt", "utf8", (error, content) => {
         contacts = JSON.parse(content || '{}');
+        contacts = Object.values(contacts); // convert to array of objects
         startServer();
     });
 };
@@ -59,6 +60,8 @@ let updateContactNameAndPhone = (req, res, contactId) => {
     readBody(req, (contact) => {
         contacts[contactId]['name'] = contact['name'];
         contacts[contactId]['phone'] = contact['phone'];
+        contacts[contactId]['address'] = contact['address'];
+        contacts[contactId]['email'] = contact['email'];
         fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
             res.end('Contact Updated');
         });
@@ -115,9 +118,19 @@ let routes = [
 
 let startServer = () => {
     let server = http.createServer((req, res) => {
-        let route = routes.find(route => route.url.test(req.url) && req.method === route.method);
-        let matches = route.url.exec(req.url);
-        route.run(req, res, matches.slice(1));
+        if (req.url === '/') {
+            fs.readFile('frontend/index.html', (error, data) => {
+                res.end(data);
+            });
+        } else if (req.url === '/index.js') {
+            fs.readFile('frontend/index.js', (error, data) => {
+                res.end(data);
+            });
+        } else {
+            let route = routes.find(route => route.url.test(req.url) && req.method === route.method);
+            let matches = route.url.exec(req.url);
+            route.run(req, res, matches.slice(1));
+        }
     });
     server.listen(3000);
 };
