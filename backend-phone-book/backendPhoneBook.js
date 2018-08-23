@@ -16,11 +16,13 @@ let displayAllContacts = (req, res, matches) => {
 
 let displayOneContact = (req, res, matches) => {
     let contactId = matches[0];
-    if (contacts.hasOwnProperty(contactId)) {
-        res.end(JSON.stringify(contacts[contactId]['name']));
-    } else {
-        res.end("Info Not Found");
-    }
+    db.one(`SELECT name, phone 
+            FROM contacts 
+            WHERE contacts.id = '${contactId}';`
+        ).then((results) => {
+            let resultDisplay = `${results.name}: ${results.phone}`;
+        res.end(resultDisplay);
+    });
 };
 
 let deleteContact = (req, res, matches) => {
