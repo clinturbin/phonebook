@@ -1,19 +1,18 @@
 const http = require('http');
 const fs = require('fs');
+const pg = require('pg-promise')();
+const dbConfig = 'postgres://clint@localhost:5432/phonebook';
+const db = pg(dbConfig);
 
-let contacts;
-
-let readPhoneBookFromFile = () => {
-    fs.readFile("phone-book.txt", "utf8", (error, content) => {
-        contacts = JSON.parse(content || '{}');
-        contacts = Object.values(contacts); // convert to array of objects
-        startServer();
-    });
-};
 
 let generateRandomID = () => Math.floor(Math.random() * 100000).toString();
 
-let displayAllContacts = (req, res, matches) => res.end(JSON.stringify(contacts));
+
+let displayAllContacts = (req, res, matches) => {
+    db.query('select * from contacts;').then((results) => {
+        res.end(JSON.stringify(results));
+    });
+};
 
 let displayOneContact = (req, res, matches) => {
     let contactId = matches[0];
@@ -116,23 +115,19 @@ let routes = [
     },
 ];
 
-let startServer = () => {
-    let server = http.createServer((req, res) => {
-        if (req.url === '/') {
-            fs.readFile('frontend/index.html', (error, data) => {
-                res.end(data);
-            });
-        } else if (req.url === '/index.js') {
-            fs.readFile('frontend/index.js', (error, data) => {
-                res.end(data);
-            });
-        } else {
-            let route = routes.find(route => route.url.test(req.url) && req.method === route.method);
-            let matches = route.url.exec(req.url);
-            route.run(req, res, matches.slice(1));
-        }
-    });
-    server.listen(3000);
-};
-
-readPhoneBookFromFile();
+let server = http.createServer((req, res) => {
+    if (req.url === '/') {
+        fs.readFile('frontend/index.html', (error, data) => {
+            res.end(data);
+        });
+    } else if (req.url === '/index.js') {
+        fs.readFile('frontend/index.js', (error, data) => {
+            res.end(data);
+        });
+    } else {
+        let route = routes.find(route => route.url.test(req.url) && req.method === route.method);
+        let matches = route.url.exec(req.url);
+        route.run(req, res, matches.slice(1));
+    }
+});
+server.listen(3000);
