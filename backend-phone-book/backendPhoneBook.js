@@ -1,4 +1,4 @@
-const http = require('http');
+const express = require('express');
 const fs = require('fs');
 const pg = require('pg-promise')();
 const dbConfig = 'postgres://clint@localhost:5432/phonebook';
@@ -14,8 +14,8 @@ let displayAllContacts = (req, res, matches) => {
     });
 };
 
-let displayOneContact = (req, res, matches) => {
-    let contactId = matches[0];
+let displayOneContact = (req, res) => {
+    let contactId = req.params.id;
     db.one(`SELECT name, phone
             FROM contacts
             WHERE contacts.id = '${contactId}';`
@@ -25,25 +25,28 @@ let displayOneContact = (req, res, matches) => {
     });
 };
 
-let deleteContact = (req, res, matches) => {
-    let contactId = matches[0];
+let deleteContact = (req, res) => {
+    let contactId = req.params.id;
     db.one(`DELETE FROM contacts
             WHERE contacts.id = '${contactId}';`).then(res.end(`Entry Removed`));
 };
 
-let createNewContact = (req, res, matches) => {
+let createNewContact = (req, res) => {
+
     readBody(req, (contact) => {
         let randomId = generateRandomID();
-        contact.id = randomId;
-        contacts[randomId] = contact;
-        fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
-            res.end(JSON.stringify(contact));
-        });
+        db.query(`INSERT INTO contacts (id, name, phone, address, email
+                  VALUES (id, name, phone, address, email;`).then
+        // contact.id = randomId;
+        // contacts[randomId] = contact;
+        // fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
+        //     res.end(JSON.stringify(contact));
+        // });
     });
 };
 
-let updateContact = (req, res, matches) => {
-    let contactId = matches[0];
+let updateContact = (req, res) => {
+    let contactId = req.params.id;
     if (contacts.hasOwnProperty(contactId)) {
         updateContactNameAndPhone(req, res, contactId);
     } else {
@@ -78,52 +81,13 @@ let noContactsFound = (req, res, matches) => {
     res.end("Error 404 No Contacts Found");
 };
 
-let routes = [
-    {
-        method: 'GET',
-        url: /^\/contacts\/([0-9]+)$/,
-        run: displayOneContact
-    },
-    {
-        method: 'DELETE',
-        url: /^\/contacts\/([0-9]+)$/,
-        run: deleteContact
-    },
-    {
-        method: 'GET',
-        url: /^\/contacts\/?$/,
-        run: displayAllContacts
-    },
-    {
-        method: 'POST',
-        url: /^\/contacts\/?$/,
-        run: createNewContact
-    },
-    {
-        method: 'PUT',
-        url: /^\/contacts\/([0-9]+)$/,
-        run: updateContact
-    },
-    {
-        method: 'GET',
-        url: /^.*$/,
-        run: noContactsFound
-    },
-];
+let server = express();
 
-let server = http.createServer((req, res) => {
-    if (req.url === '/') {
-        fs.readFile('frontend/index.html', (error, data) => {
-            res.end(data);
-        });
-    } else if (req.url === '/index.js') {
-        fs.readFile('frontend/index.js', (error, data) => {
-            res.end(data);
-        });
-    } else {
-        let route = routes.find(route => route.url.test(req.url) && req.method === route.method);
-        let matches = route.url.exec(req.url);
-        route.run(req, res, matches.slice(1));
-    }
-});
+server.get('/contacts', displayAllContacts);
+server.post('/contacts', createNewContact);
+server.get('/contacts/:id', displayOneContact);
+server.delete('/contacts/:id', deleteContact);
+server.put('/contacts/:id', updateContact);
+server.put(/^.*$/, noContactsFound);
+
 server.listen(3000);
