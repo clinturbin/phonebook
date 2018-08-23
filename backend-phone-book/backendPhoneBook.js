@@ -16,25 +16,19 @@ let displayAllContacts = (req, res, matches) => {
 
 let displayOneContact = (req, res, matches) => {
     let contactId = matches[0];
-    db.one(`SELECT name, phone 
-            FROM contacts 
+    db.one(`SELECT name, phone
+            FROM contacts
             WHERE contacts.id = '${contactId}';`
         ).then((results) => {
             let resultDisplay = `${results.name}: ${results.phone}`;
-        res.end(resultDisplay);
+            res.end(resultDisplay);
     });
 };
 
 let deleteContact = (req, res, matches) => {
     let contactId = matches[0];
-    if (contacts.hasOwnProperty(contactId)) {
-        delete contacts[contactId];
-        fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
-            res.end("Entry Removed");
-        });
-    } else {
-        res.end("Contact not found");
-    }
+    db.one(`DELETE FROM contacts
+            WHERE contacts.id = '${contactId}';`).then(res.end(`Entry Removed`));
 };
 
 let createNewContact = (req, res, matches) => {
