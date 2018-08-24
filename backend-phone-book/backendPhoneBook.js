@@ -27,21 +27,18 @@ let displayOneContact = (req, res) => {
 
 let deleteContact = (req, res) => {
     let contactId = req.params.id;
-    db.one(`DELETE FROM contacts
-            WHERE contacts.id = '${contactId}';`).then(res.end(`Entry Removed`));
+    db.query(`DELETE FROM contacts
+              WHERE contacts.id = '${contactId}';`
+            ).then(res.end(`Entry Removed`));
 };
 
 let createNewContact = (req, res) => {
-
     readBody(req, (contact) => {
         let randomId = generateRandomID();
-        db.query(`INSERT INTO contacts (id, name, phone, address, email
-                  VALUES (id, name, phone, address, email;`).then
-        // contact.id = randomId;
-        // contacts[randomId] = contact;
-        // fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
-        //     res.end(JSON.stringify(contact));
-        // });
+        db.query(`INSERT INTO contacts (id, name, phone, address, email) VALUES 
+                 ('${randomId}', '${contact['name']}', '${contact['phone']}', 
+                  '${contact['address']}', '${contact['email']}');`
+                ).then(res.end(`Entry Added`))
     });
 };
 
