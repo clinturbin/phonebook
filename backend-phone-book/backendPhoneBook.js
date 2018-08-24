@@ -8,7 +8,7 @@ const db = pg(dbConfig);
 let generateRandomID = () => Math.floor(Math.random() * 100000).toString();
 
 
-let displayAllContacts = (req, res, matches) => {
+let displayAllContacts = (req, res) => {
     db.query('select * from contacts;').then((results) => {
         res.end(JSON.stringify(results));
     });
@@ -43,23 +43,13 @@ let createNewContact = (req, res) => {
 };
 
 let updateContact = (req, res) => {
-    let contactId = req.params.id;
-    if (contacts.hasOwnProperty(contactId)) {
-        updateContactNameAndPhone(req, res, contactId);
-    } else {
-        res.end('No Contact Found');
-    }
-};
-
-let updateContactNameAndPhone = (req, res, contactId) => {
     readBody(req, (contact) => {
-        contacts[contactId]['name'] = contact['name'];
-        contacts[contactId]['phone'] = contact['phone'];
-        contacts[contactId]['address'] = contact['address'];
-        contacts[contactId]['email'] = contact['email'];
-        fs.writeFile("phone-book.txt", JSON.stringify(contacts), (error) => {
-            res.end('Contact Updated');
-        });
+        let contactId = req.params.id;
+        db.query(`UPDATE contacts 
+                  SET name = '${contact['name']}', phone = '${contact['phone']}', 
+                      address = '${contact['address']}', email = '${contact['email']}'
+                  WHERE contacts.id = '${contactId}';`
+                ).then(res.end(`Entry Updated`))
     });
 };
 
@@ -74,7 +64,7 @@ let readBody = (req, callback) => {
     });
 };
 
-let noContactsFound = (req, res, matches) => {
+let noContactsFound = (req, res) => {
     res.end("Error 404 No Contacts Found");
 };
 
@@ -85,6 +75,6 @@ server.post('/contacts', createNewContact);
 server.get('/contacts/:id', displayOneContact);
 server.delete('/contacts/:id', deleteContact);
 server.put('/contacts/:id', updateContact);
-server.put(/^.*$/, noContactsFound);
+server.get(/^.*$/, noContactsFound);
 
 server.listen(3000);
