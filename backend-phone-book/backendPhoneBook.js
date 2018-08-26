@@ -53,6 +53,18 @@ let updateContact = (req, res) => {
     });
 };
 
+let homepage = (req, res) => {
+    fs.readFile('frontend/index.html', (err, data) => {
+        res.end(data);
+    })
+};
+
+let javascript = (req, res) => {
+    fs.readFile('frontend/index.js', (err, data) => {
+        res.end(data);
+    })
+};
+
 let readBody = (req, callback) => {
     let body = '';
     req.on('data', (chunk) => {
@@ -70,11 +82,13 @@ let noContactsFound = (req, res) => {
 
 let server = express();
 
+server.get('/', homepage);
+server.get('/index.js', javascript);
 server.get('/contacts', displayAllContacts);
 server.post('/contacts', createNewContact);
 server.get('/contacts/:id', displayOneContact);
 server.delete('/contacts/:id', deleteContact);
 server.put('/contacts/:id', updateContact);
-server.get(/^.*$/, noContactsFound);
+server.get('*', noContactsFound);
 
 server.listen(3000);
